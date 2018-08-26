@@ -76,8 +76,16 @@ In `http4s`, you specify these _routes_ using the Domain Specific Language (DSL)
 Luckily, you don't really need to understand much of that to get something up and running. For instance,
 
 ```scala
+
+import javax.ws.rs.{DELETE, GET, POST, PUT}
+import org.http4s.{HttpService, Request, Response}
+import org.http4s.dsl.impl.Root
+import scalaz.concurrent.Task
+
+import scala.concurrent.ExecutionContext
+
 object MyService {
-  val service(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService = Router(
+  def service(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService[_] = Router(
     case req @ GET -> Root / "musicians" => fetchMusicianList(req)
     case req @ GET -> Root / "musicians" / musicianID => fetchMusician(req, musicianID)
     case req @ POST -> Root / "musicians" => createMusician(req)
@@ -183,7 +191,7 @@ If your REST API has a lot of routes, the service definition will get a little l
 
 ```scala
 object MyService {
-  type Routes = PartialFunction[Request, Task[Response]]
+  type Routes = PartialFunction[Request[_], Task[Response[_]]]
 
   def musicianRoutes: Routes = {
     case req @ GET -> Root / "musicians" => fetchMusicianList(req)
@@ -209,7 +217,7 @@ object MyService {
     case DELETE -> Root / "albums" / albumID => deleteAlbum(albumID)
   }
 
-  def service(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService = HttpService(
+  def service(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService[_] = HttpService(
     musicianRoutes orElse bandRoutes orElse albumRoutes
   )
 }
